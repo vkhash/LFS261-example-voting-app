@@ -1,0 +1,38 @@
+pipeline {
+  agent any
+  tools {
+    maven 'nodejs-22'
+  }
+  stages {
+    stage("build") {
+      when {
+        changeset "**/result/**"
+      }
+      steps {
+        echo 'Install packages for result app'
+        dir('result') {
+          sh 'npm install'
+        }
+      }
+    }
+    stage("test") {
+      when {
+        changeset "**/result/**"
+      }
+      steps {
+        echo 'Test result app'
+        dir('result') {
+          sh '''
+            npm install
+            npm test
+          '''
+        }
+      }
+    }
+  }
+  post {
+    always {
+      echo 'Building multibranch pipeline for result app is completed'
+    }
+  }
+}
