@@ -1,7 +1,7 @@
 pipeline {
   agent any
   tools {
-    maven 'nodejs-22'
+    nodejs 'nodejs-22'
   }
   stages {
     stage("build") {
