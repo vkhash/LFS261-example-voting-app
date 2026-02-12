@@ -33,6 +33,14 @@ pipeline {
   post {
     always {
       echo 'Building multibranch pipeline for result app is completed'
+      def result = currentBuild.currentResult.toLowerCase()
+      discordSend webhookURL: "$DISCORD_WEBHOOK_URL",
+                  title: "${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
+                  result: currentBuild.currentResult,
+                  description: "**Build:** ${env.BUILD_NUMBER}\n**Status:** ${result}\n",
+                  enableArtifactsList: true,
+                  successful: true,
+                  showChangeset: true
     }
   }
 }
