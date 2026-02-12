@@ -1,5 +1,8 @@
 pipeline {
   agent any
+  environment {
+    DISCORD_WEBHOOK_URL = credentials('DISCORD-WEBHOOK-URL')
+  }
   tools {
     maven 'maven 3.9.12'
   }
@@ -43,6 +46,13 @@ pipeline {
   post {
     always {
       echo 'Building multibranch pipeline for worker is completed..'
+      discordSend webhookURL: DISCORD_WEBHOOK_URL,
+                  title: "${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
+                  result: currentBuild.currentResult,
+                  description: "**Build:** ${env.BUILD_NUMBER}\n",
+                  enableArtifactsList: true,
+                  successful: true,
+                  showChangeset: true
     }
   }
 }
