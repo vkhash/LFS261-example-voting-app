@@ -31,10 +31,10 @@ pipeline {
     }
   }
   post {
+    environment {
+      DISCORD_WEBHOOK_URL = credentials('DISCORD-WEBHOOK-URL')
+    }
     always {
-      environment {
-        DISCORD_WEBHOOK_URL = credentials('DISCORD-WEBHOOK-URL')
-      }
       echo 'Building multibranch pipeline for result app is done'
       discordSend webhookURL: DISCORD_WEBHOOK_URL,
                   title: "${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
