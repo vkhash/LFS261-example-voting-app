@@ -35,7 +35,7 @@ pipeline {
   }
   post {
     always {
-      echo 'Building multibranch pipeline for result app is completed'
+      echo 'Building multibranch pipeline for result app is done'
       discordSend webhookURL: '$DISCORD_WEBHOOK_URL',
                   title: "${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
                   result: currentBuild.currentResult,
