@@ -65,7 +65,7 @@ pipeline {
                   title: "${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
                   result: currentBuild.currentResult,
                   description: "**App:** vote\n**Build:** ${env.BUILD_NUMBER}\n",
-                  enableArtifactsList: true,
+                  enableArtifactsList: false,
                   successful: true,
                   showChangeset: true
     }
