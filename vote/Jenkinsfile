@@ -1,67 +1,73 @@
-pipeline { 
-    agent none
-    stages{ 
-        stage('build'){ 
-            agent{
-                docker{
-                    image 'python:3.11-slim'
-                    args '--user root'
-                    }
-                    }
-
-            steps{ 
-                echo 'Compiling vote app.' 
-                dir('vote'){
-            
-                        sh "pip install -r requirements.txt"
-
-                } 
-            } 
-        } 
-        stage('test'){ 
-           
-            agent {
-                docker{
-                    image 'python:3.11-slim'
-                    args '--user root'
-                    }
-                    }
-            steps{ 
-                echo 'Running Unit Tests on vote app.' 
-                dir('vote'){ 
-                   
-                        sh "pip install -r requirements.txt"
-                        sh 'nosetests -v'
-                        
-                        
-                } 
-            } 
-        } 
-
-      stage('docker-package'){
-          agent any
-         
-          steps{
-            echo 'Packaging wvoteorker app with docker'
-            script{
-              docker.withRegistry('https://index.docker.io/v1/', 'dockerlogin') {
-                  // ./vote is the path to the Dockerfile that Jenkins will find from the Github repo
-                  def voteImage = docker.build("xxxx/vote:v${env.BUILD_ID}", "./vote")
-                  voteImage.push()
-                  voteImage.push("${env.BRANCH_NAME}")
-                  voteImage.push("latest")
-              }
-            }
-          }
+pipeline {
+  agent none
+  environment {
+    DISCORD_WEBHOOK_URL = credentials('DISCORD-WEBHOOK-URL')
+  }
+  stages {
+    stage('build') {
+      when {
+        changeset "**/vote/**"
       }
-
-    } 
-    post {
-        always{
-            echo 'Pipeline for vote is complete'
+      agent {
+        docker {
+          image 'python:3.11-slim'
+          args '--user root'
         }
+      }
+      steps {
+        echo 'Compiling vote app.'
+        dir('vote') {
+          sh "pip install -r requirements.txt"
+        }
+      }
     }
-
-} 
-
-
+    stage('test') {
+      when {
+        changeset "**/vote/**"
+      }
+      agent {
+        docker {
+          image 'python:3.11-slim'
+          args '--user root'
+        }
+      }
+      steps {
+        echo 'Running Unit Tests on vote app.'
+        dir('vote') { 
+          sh "pip install -r requirements.txt"
+          sh 'nosetests -v'
+        }
+      }
+    } 
+    stage('docker-package') {
+      when {
+        branch 'master'
+        changeset "**/vote/**"
+      }
+      agent any
+      steps {
+        echo 'Packaging vote app with docker'
+        script {
+          docker.withRegistry('https://index.docker.io/v1/', 'docker-vkhash') {
+            def voteImage = docker.build("vkhash/private:vote-v${env.BUILD_ID}", "./vote")
+            voteImage.push()
+            // voteImage.push("vote-${env.BRANCH_NAME}")
+            voteImage.push("vote-latest")
+          }
+        }
+      }
+    }
+  }
+  post {
+    always{
+      echo 'Pipeline for vote is complete'
+      discordSend webhookURL: DISCORD_WEBHOOK_URL,
+                  title: "${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
+                  result: currentBuild.currentResult,
+                  description: "**App:** vote\n**Build:** ${env.BUILD_NUMBER}\n",
+                  enableArtifactsList: true,
+                  successful: true,
+                  showChangeset: true
+    }
+  }
+}
