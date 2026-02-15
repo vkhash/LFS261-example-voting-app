@@ -3,13 +3,15 @@ pipeline {
   environment {
     DISCORD_WEBHOOK_URL = credentials('DISCORD-WEBHOOK-URL')
   }
-  tools {
-    nodejs 'nodejs-22'
-  }
   stages {
     stage("build") {
       when {
         changeset "**/result/**"
+      }
+      agent {
+        docker {
+          image 'node:22.22.0-trixie-slim'
+        }
       }
       steps {
         echo 'npm install packages for result app'
@@ -22,6 +24,11 @@ pipeline {
       when {
         changeset "**/result/**"
       }
+      agent {
+        docker {
+          image 'node:22.22.0-trixie-slim'
+        }
+      }
       steps {
         echo 'npm test result app'
         dir('result') {
@@ -32,6 +39,23 @@ pipeline {
         }
       }
     }
+    stage("docker-package") {
+      agent any
+      when {
+        branch 'master'
+        changeset "**/result/**"
+      }
+      steps {
+        echo 'Packaging result app with Docker'
+        script {
+          docker.withRegistry('https://index.docker.io/v1/', 'docker-vkhash') {
+            def workerImage = docker.build("vkhash/private:result-v${env.BUILD_ID}", "./result")
+            workerImage.push()
+            workerImage.push("result-latest")
+          }
+        }
+      }
+    }
   }
   post {
     always {
@@ -39,7 +63,7 @@ pipeline {
       discordSend webhookURL: DISCORD_WEBHOOK_URL,
                   title: "${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
                   result: currentBuild.currentResult,
-                  description: "**Build:** ${env.BUILD_NUMBER}\n",
+                  description: "**App:** result\n**Build:** ${env.BUILD_NUMBER}\n",
                   enableArtifactsList: true,
                   successful: true,
                   showChangeset: true
