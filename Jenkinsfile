@@ -135,7 +135,7 @@ pipeline {
         }
       }
       steps {
-        echo 'Running Unit Tests on vote app.'
+        echo 'Running Unit Tests on vote app'
         dir('vote') { 
           sh "pip install -r requirements.txt"
           sh 'nosetests -v'
@@ -173,11 +173,11 @@ pipeline {
   }
   post {
     always {
-      echo 'Building multibranch pipeline for worker is completed..'
+      echo 'Building multibranch pipeline for instavote app is completed'
       discordSend webhookURL: DISCORD_WEBHOOK_URL,
                   title: "${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
                   result: currentBuild.currentResult,
-                  description: "**App:** worker\n**Build:** ${env.BUILD_NUMBER}\n",
+                  description: "**App:** instavote\n**Build:** ${env.BUILD_NUMBER}\n",
                   enableArtifactsList: false,
                   successful: true,
                   showChangeset: true
