@@ -166,7 +166,7 @@ pipeline {
         branch 'master'
       }
       environment{
-        sonarpath = tool 'SonarScanner'
+        sonarpath = tool 'SonarQubeScanner'
       }
       steps {
         echo 'Running Sonarqube Analysis..'
